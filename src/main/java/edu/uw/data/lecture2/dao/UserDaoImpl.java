@@ -27,7 +27,7 @@ public class UserDaoImpl  implements UserDao  {
 
   //@Transactional(readOnly = true)
   public List<User> findAll() {
-   return   em.createQuery("FROM Book").getResultList();
+   return    em.createQuery("FROM User",User.class).getResultList();
    // also " SELECT u FROM User u"""
   }
 
