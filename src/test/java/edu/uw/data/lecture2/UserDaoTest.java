@@ -103,7 +103,7 @@ public class UserDaoTest extends AbstractTransactionalJUnit4SpringContextTests {
         User user = new User.Builder().userName(username).build();
 
 
-        // verify book is already in the database
+        // verify user is already in the database
         String foundUsername = jdbcTemplate.queryForObject(
                 "select USERNAME  from USERS  where USERNAME = ?", String.class, username);
 
