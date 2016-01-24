@@ -1,71 +1,76 @@
 package edu.uw.data.lecture2.dao;
 
-import edu.uw.data.lecture2.model.*;
-import org.slf4j.*;
-import org.springframework.stereotype.*;
+import edu.uw.data.lecture2.model.User;
+import org.hibernate.Query;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.orm.hibernate4.support.HibernateDaoSupport;
+import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
-import javax.persistence.*;
-import java.util.*;
+import java.util.List;
 
 /**
  * simple single-table Jdbc example with try-resources and datasource
  */
-//@Transactional
 @Repository("userDao")
-public class UserDaoImpl  implements UserDao  {
+@Transactional 
+public class UserDaoImpl extends HibernateDaoSupport implements UserDao {
 
   static final Logger log = LoggerFactory.getLogger(UserDaoImpl.class);
 
-
-  @PersistenceContext
-  private EntityManager em;
-
+  @Autowired
+  SessionFactory sessionFactory;
 
   public User findById(Integer id) {
-    return   em.find(User.class, id);
+    return (User) sessionFactory.getCurrentSession().get(User.class, id);
   }
 
-  //@Transactional(readOnly = true)
+
   public List<User> findAll() {
-   return    em.createQuery("FROM User",User.class).getResultList();
-   // also " SELECT u FROM User u"""
+    return (List<User>) getHibernateTemplate().find("from User");
+
+    //  return sessionFactory.getCurrentSession().createQuery("from User").list();
+
   }
-
-
-
 
 
   @Override
   public User findByUsername(String uname) {
-    return (User )em.createQuery(
-        "SELECT u FROM User u WHERE u.userName = :uname")
-        .setParameter("uname", uname)
-        .getSingleResult();
+    Query query = sessionFactory.getCurrentSession().createQuery(
+        "SELECT u FROM User u WHERE u.userName LIKE :uname");
+    query.setParameter("uname", uname);
+    User  user =(User) query.uniqueResult();
+    return user;
+
   }
 
   @Override
-  //@Transactional(readOnly = true)
+
   public User save(User user) {
-    if (user.getId() ==null)  { //insert
-      em.persist(user);
-    } else { //update
-      em.merge(user);
-    }
-    em.flush();
-    log.info("saved "+user.getId());
+    Session session = sessionFactory.getCurrentSession();
+    session.saveOrUpdate(user);
+    session.flush();
+
+
+    log.info("saved " + user.getId());
     return user;
   }
 
 
   public void delete (User user){
     if (user.getId()!=null) {
-        em.remove(user) ;
+      sessionFactory.getCurrentSession().delete(user);
     }else if (user.getUserName()!=null) {
-        em.createQuery("DELETE FROM User u WHERE u.userName = :username")
-                .setParameter("username", user.getUserName())
-                .executeUpdate();
+      sessionFactory.getCurrentSession()
+          .createQuery("DELETE FROM User u WHERE u.userName = :username")
+          .setString("username", user.getUserName())
+          .executeUpdate();
     } else {
-        throw new IllegalArgumentException("User does not contain identifying information "+user);
+      throw new IllegalArgumentException("User does not contain identifying information "+user);
     }
   }
 

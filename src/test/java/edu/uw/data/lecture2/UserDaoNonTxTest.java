@@ -7,11 +7,11 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.test.annotation.Rollback;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.AbstractTransactionalJUnit4SpringContextTests;
+import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import javax.sql.DataSource;
@@ -31,20 +31,26 @@ import static org.junit.Assert.*;
          "classpath:/datasource-embedded-init-p6spy.xml"     // uncomment this line if you want an embedded derby service started automatically
        // "classpath:/datasource-standalone-test.xml"  // uncomment this line if you have a derby standalone service already running
 })
-@Transactional(transactionManager = "txManager") @Rollback
-public class UserDaoTest extends AbstractTransactionalJUnit4SpringContextTests {
+public class UserDaoNonTxTest extends AbstractJUnit4SpringContextTests {
 
-    static final Logger log = LoggerFactory.getLogger(UserDaoTest.class);
+    public static final Logger log = LoggerFactory.getLogger(UserDaoTest.class);
 
     @Resource
     private UserDao userDao;
 
-    @Override
-    @Resource(name = "dataSource")
-    public void setDataSource(DataSource dataSource) {
-        super.setDataSource(dataSource);
-    }
 
+
+    private DataSource dataSource;
+    private NamedParameterJdbcTemplate namededJdbcTemplate;
+    private JdbcTemplate jdbcTemplate;
+
+
+    @Resource
+    public void setDataSource(DataSource dataSource) {
+        this.dataSource = dataSource;
+        this.namededJdbcTemplate = new NamedParameterJdbcTemplate(dataSource);
+        this.jdbcTemplate = new JdbcTemplate(dataSource);
+    }
 
     @Test
     public void createUser() {
@@ -90,12 +96,11 @@ public class UserDaoTest extends AbstractTransactionalJUnit4SpringContextTests {
         userDao.save(jsmith);
 
         // verify user was updated
-      //  User updatedUsername = userDao.findByUsername("jsmith");
-        String updatedUsername = jdbcTemplate.queryForObject(
-            "select LASTNAME  from USERS  where USERNAME = ?", String.class, "jsmith");
+        String updatedLastName  = userDao.findByUsername("jsmith").getLastName();
+       // String updatedLastName = jdbcTemplate.queryForObject(  "select LASTNAME  from USERS  where USERNAME = :username", String.class, "jsmith");
 
 
-        assertThat(updatedUsername, is("Smith2"));
+        assertThat(updatedLastName, is("Smith2"));
     }
 
     @Test

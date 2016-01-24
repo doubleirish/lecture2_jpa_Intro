@@ -1,21 +1,18 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>edu.uw.data</groupId>
-  <artifactId>lecture2_jpaIntroFull</artifactId>
+  <artifactId>lecture2_HibernateIntroFull</artifactId>
   <version>1.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
-  <name>lecture2_jpaIntroFull</name>
+  <name>lecture2_HibernateIntroFull</name>
   <url>https://github.com/doubleirish/lecture2_jpa_Intro</url>
-<description>
-  We create a JPA based Data Access Object (DAO) to access a simple User Table.
- We show how to setup the JPA Entity Manager and an Entity ManagerFactory.
-  We define a DAO interface to query,create and update Users .
-  We  implement the interface using the entity Manager API service.
-  Finally Unit Tests allow us to verify the correctness of our DAO.
-</description>
+  <description>
+    We create a Simple UserDao based off  on  Hibernate Session  and Session Factory.
+    We also make some simple CRUD and Query   calls using Hibernate Session and Spring JDBC template.
+  </description>
 
 
     <parent>
@@ -24,139 +21,124 @@
         <version>1.3.1.RELEASE</version>
     </parent>
 
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>1.8</java.version>
         <spring.version>4.2.4.RELEASE</spring.version>
-        <hibernate.version>5.0.6.Final</hibernate.version>
-    </properties>
+        <hibernate.version>4.3.8.Final</hibernate.version>
+  </properties>
 
-    <build>
+  <build>
 
-        <plugins>
+    <plugins>
 
           <!-- Spring Boot includes a Maven plugin that can package the project as an executable jar.
      e.g mvn clean package -DskipTests spring-boot:repackage
      -->
 
-          <plugin>
+      <plugin>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-maven-plugin</artifactId>
-          </plugin>
+      </plugin>
 
+      <!-- mvn exec:java  -->
+      <!-- mvn exec:java -Dexec.mainClass="com.example.Main" -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <version>1.2.1</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>java</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <mainClass>edu.uw.data.lecture2.app.App</mainClass>
+        </configuration>
+      </plugin>
 
-            <!--<plugin>-->
-                <!--<groupId>org.apache.maven.plugins</groupId>-->
-                <!--<artifactId>maven-compiler-plugin</artifactId>-->
-                <!--<version>3.2</version>-->
-                <!--<configuration>-->
-                    <!--<source>1.8</source>-->
-                    <!--<target>1.8</target>-->
-                <!--</configuration>-->
-            <!--</plugin>-->
+    </plugins>
 
-            <!-- can use following for command line execution e.g mvn exec:java  -->
-            <!-- e.g mvn exec:java -Dexec.mainClass="com.example.Main" -->
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <version>1.2.1</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>java</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <mainClass>edu.uw.data.lecture2.app.App</mainClass>
-                </configuration>
-            </plugin>
-
-        </plugins>
-
-    </build>
+  </build>
 
 
 
 
-    <dependencies>
-
-      <!-- includes common spring/jpa libraries -->
-      <dependency>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-data-jpa</artifactId>
-      </dependency>
-
-      <!--<dependency>-->
-          <!--<groupId>org.hibernate</groupId>-->
-          <!--<artifactId>hibernate-core</artifactId>-->
-          <!--<version>${hibernate.version}</version>-->
-      <!--</dependency>-->
-
-      <!--<dependency>-->
-          <!--<groupId>org.hibernate</groupId>-->
-          <!--<artifactId>hibernate-entitymanager</artifactId>-->
-          <!--<version>${hibernate.version}</version>-->
-      <!--</dependency>-->
-
-      <!-- JSR 303 validator-->
-      <!--<dependency>-->
-          <!--<groupId>org.hibernate</groupId>-->
-          <!--<artifactId>hibernate-validator</artifactId>-->
-          <!--<version>5.1.3.Final</version>-->
-      <!--</dependency>-->
+  <dependencies>
 
 
-      <!-- derby JDBC client to standalone server -->
-          <dependency>
-              <groupId>org.apache.derby</groupId>
-              <artifactId>derbyclient</artifactId>
-              <version>10.11.1.1</version>
-          </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-context-support</artifactId>
+      <version>${spring.version}</version>
+    </dependency>
 
-      <!-- embedded derby database engine and embedded JDBC client -->
-      <dependency>
-          <groupId>org.apache.derby</groupId>
-          <artifactId>derby</artifactId>
-          <version>10.11.1.1</version>
-      </dependency>
+    <!--- spring orm support-->
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-orm</artifactId>
+      <version>${spring.version}</version>
+    </dependency>
 
-      <!-- basic data source -->
-      <dependency>
-          <groupId>commons-dbcp</groupId>
-          <artifactId>commons-dbcp</artifactId>
-          <version>1.4</version>
-      </dependency>
 
-      <!-- string utils -->
-      <dependency>
-          <groupId>org.apache.commons</groupId>
-          <artifactId>commons-lang3</artifactId>
-          <version>3.0</version>
-      </dependency>
+    <dependency>
+      <groupId>org.hibernate</groupId>
+      <artifactId>hibernate-core</artifactId>
+      <version>${hibernate.version}</version>
+    </dependency>
+
+
+    <!-- derby JDBC client to standalone server -->
+    <dependency>
+      <groupId>org.apache.derby</groupId>
+      <artifactId>derbyclient</artifactId>
+      <version>10.11.1.1</version>
+    </dependency>
+
+    <!-- embedded derby database engine and embedded JDBC client -->
+    <dependency>
+      <groupId>org.apache.derby</groupId>
+      <artifactId>derby</artifactId>
+      <version>10.11.1.1</version>
+    </dependency>
+
+    <!-- basic data source -->
+    <dependency>
+      <groupId>commons-dbcp</groupId>
+      <artifactId>commons-dbcp</artifactId>
+      <version>1.4</version>
+    </dependency>
+
+    <!-- string utils -->
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+      <version>3.0</version>
+    </dependency>
 
 
 
     <dependency>
-      <groupId>commons-logging</groupId>
-      <artifactId>commons-logging</artifactId>
-      <version>1.2</version>
+        <groupId>commons-logging</groupId>
+        <artifactId>commons-logging</artifactId>
+        <version>1.2</version>
     </dependency>
 
 
-      <dependency>
-          <groupId>ch.qos.logback</groupId>
-          <artifactId>logback-classic</artifactId>
-          <version>1.1.2</version>
-      </dependency>
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+      <version>1.1.2</version>
+    </dependency>
 
-      <!--  collection utils etc -->
-      <dependency>
-          <groupId>com.google.guava</groupId>
-          <artifactId>guava</artifactId>
-          <version>18.0</version>
-      </dependency>
+    <!--  collection utils etc -->
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>18.0</version>
+    </dependency>
 
     <!--
     allows for interpolated property files e.g
@@ -170,44 +152,44 @@
       <version>1.10</version>
     </dependency>
 
-      <!--  test related-->
-      <!-- Support for common test dependencies, including JUnit, Hamcrest and Mockito along with the-->
-      <dependency>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-test</artifactId>
-        <scope>test</scope>
-      </dependency>
+    <!--  test related-->
+    <!-- Support for common test dependencies, including JUnit, Hamcrest and Mockito along with the-->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+    </dependency>
 
-      <!-- debug  sql connection -->
-      <dependency>
-        <groupId>p6spy</groupId>
-        <artifactId>p6spy</artifactId>
-        <version>2.1.4</version>
-        <scope>test</scope>
-      </dependency>
+    <!-- debug  sql connection -->
+    <dependency>
+      <groupId>p6spy</groupId>
+      <artifactId>p6spy</artifactId>
+      <version>2.1.4</version>
+      <scope>test</scope>
+    </dependency>
 
 
   </dependencies>
 
 
-  <repositories>
-    <repository>
-      <id>spring-releases</id>
-      <name>Spring Releases</name>
-      <url>https://repo.spring.io/libs-release</url>
-    </repository>
-    <repository>
-      <id>org.jboss.repository.releases</id>
-      <name>JBoss Maven Release Repository</name>
-      <url>https://repository.jboss.org/nexus/content/repositories/releases</url>
-    </repository>
-  </repositories>
+    <repositories>
+      <repository>
+        <id>spring-releases</id>
+        <name>Spring Releases</name>
+        <url>https://repo.spring.io/libs-release</url>
+      </repository>
+      <repository>
+        <id>org.jboss.repository.releases</id>
+        <name>JBoss Maven Release Repository</name>
+        <url>https://repository.jboss.org/nexus/content/repositories/releases</url>
+      </repository>
+    </repositories>
 
-  <pluginRepositories>
-    <pluginRepository>
-      <id>spring-releases</id>
-      <name>Spring Releases</name>
-      <url>https://repo.spring.io/libs-release</url>
-    </pluginRepository>
-  </pluginRepositories>
+    <pluginRepositories>
+      <pluginRepository>
+        <id>spring-releases</id>
+        <name>Spring Releases</name>
+        <url>https://repo.spring.io/libs-release</url>
+      </pluginRepository>
+    </pluginRepositories>
 </project>
